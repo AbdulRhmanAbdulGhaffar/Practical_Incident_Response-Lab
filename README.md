@@ -363,7 +363,7 @@ For printable checklists and step-by-step procedures, see `/docs/playbooks.md`.
 
 ## 🎥 Demo Video
 
-![Demo](./End.gif)
+![Demo](./End.mp4)
 
 
 ## Cloud notes — Google Cloud specifics
