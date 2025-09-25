@@ -17,7 +17,7 @@ Read the **Preface** and **Exact reproduction steps** sections before running an
 ---
 
 ## Demo Video (play here)
-Place `end.mp4` in the repository root. This demo shows the full flow: attack simulation, Wazuh alert, and Active Response blocking the malicious IP.
+Place `End.mp4` in the repository root. This demo shows the full flow: attack simulation, Wazuh alert, and Active Response blocking the malicious IP.
 
 <video width="720" controls>
   <source src="end.mp4" type="video/mp4">
