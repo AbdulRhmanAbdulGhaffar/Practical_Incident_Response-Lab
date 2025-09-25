@@ -8,16 +8,35 @@
 
 ## Preface — How to use this README (Read first)
 This document is the single authoritative guide for reproducing the lab and preparing the demo video (`end.mp4`).  
-Read the **Preface** and **Exact reproduction steps** sections before running any script.  
-- Use the **copyable single‑line commands** (marked `COPY`) for quick execution.  
-- Use multi‑line blocks only when you need to edit configuration snippets.  
-- Always replace placeholders like `<ATTACKER_IP>`, `<UBUNTU_IP>`, `<WINDOWS_IP>`, and `<WEBSERVER_IP>` with actual addresses.  
+Read the **Preface** and **Exact reproduction steps** sections before running any script.
+- Use the **copyable single‑line commands** (marked `COPY`) for quick execution.
+- Use multi‑line blocks only when you need to edit configuration snippets.
+- Always replace placeholders like `<ATTACKER_IP>`, `<UBUNTU_IP>`, `<WINDOWS_IP>`, and `<WEBSERVER_IP>` with actual addresses.
 - This README assumes you run commands with appropriate privileges (sudo / administrator).
 
 ---
 
+## Demo Video (play here)
+Place `end.mp4` in the repository root. This demo shows the full flow: attack simulation, Wazuh alert, and Active Response blocking the malicious IP.
+
+<video width="720" controls>
+  <source src="end.mp4" type="video/mp4">
+  Your browser does not support the video tag. Download `end.mp4` from the repo root to view the demonstration.
+</video>
+
+---
+
+## Output screenshot — block event (after Active Response)
+This screenshot shows the alert / block action observed after triggering the Active Response in the lab:
+
+<p align="center">
+  <img src="https://i.postimg.cc/FsxX50tX/Screenshot-2025-09-25-040507.png" alt="Block Event Screenshot" width="820"/>
+</p>
+
+---
+
 ## Overview
-**Practical_Incident_Response-Lab** is a production-minded, hands‑on Incident Response lab.  
+**Practical_Incident_Response-Lab** is a production-minded, hands‑on Incident Response lab.
 It documents and reproduces the **Blocking a known malicious actor** use case using **Wazuh SIEM** (CDB lists + Active Response).
 
 This README contains:
@@ -28,22 +47,21 @@ This README contains:
 - Playbook steps
 - References & video
 
-The demo video file is `end.mp4` placed in the repository root. Use it for presentations or to record playback.
-
 ---
 
 ## Quick links
-- Wazuh quickstart: https://documentation.wazuh.com/current/quickstart.html  
-- Wazuh PoC (blocking malicious actor): https://documentation.wazuh.com/current/proof-of-concept-guide/block-malicious-actor-ip-reputation.html  
+- Wazuh quickstart: https://documentation.wazuh.com/current/quickstart.html
+- Wazuh PoC (blocking malicious actor): https://documentation.wazuh.com/current/proof-of-concept-guide/block-malicious-actor-ip-reputation.html
 - My Wazuh install guide: https://github.com/AbdulRhmanAbdulGhaffar/Wazuh_Installation_Guide
+- Repository LICENSE: https://github.com/AbdulRhmanAbdulGhaffar/Practical_Incident_Response-Lab/blob/main/LICENSE
 
 ---
 
 ## Lab summary — blocking a known malicious actor
-- **Goal:** Detect and automatically block a malicious IP address using an IP reputation list and Wazuh Active Response.  
-- **Attacker:** RHEL 9.0 (simulated).  
-- **Victims:** Ubuntu 22.04 (Apache) and Windows 11 (Apache binary).  
-- **Manager:** Wazuh Manager with CDB lists.  
+- **Goal:** Detect and automatically block a malicious IP address using an IP reputation list and Wazuh Active Response.
+- **Attacker:** RHEL 9.0 (simulated).
+- **Victims:** Ubuntu 22.04 (Apache) and Windows 11 (Apache binary).
+- **Manager:** Wazuh Manager with CDB lists.
 - **Response:** Active Response runs `firewall-drop` / `netsh` to block the IP for **60 seconds**.
 
 ---
@@ -106,7 +124,7 @@ Notes:
 Steps (manual; copy the config snippet):
 
 - Install Visual C++ Redistributable.
-- Extract Apache to `C:\Apache24` and run `C:\Apache24\bin\httpd.exe` as Administrator.
+- Extract Apache to `C:\Apache24` and run `C:\Apache24in\httpd.exe` as Administrator.
 - Allow Windows Defender Firewall when prompted.
 - Test: `http://<WINDOWS_IP>` from another host.
 
@@ -114,7 +132,7 @@ Wazuh agent config snippet (copy and paste into agent `ossec.conf`):
 ```xml
 <localfile>
   <log_format>syslog</log_format>
-  <location>C:\Apache24\logs\access.log</location>
+  <location>C:\Apache24\logsccess.log</location>
 </localfile>
 ```
 
@@ -247,14 +265,14 @@ Expected:
 
 ### 7) Visualize alerts & troubleshooting
 
-- Open Wazuh Dashboard → *Threat Hunting* or *Alerts*.  
-- Filter: `rule.id:(651 OR 100100)` or search by time/victim IP.  
-- Save sample alerts under `/logs/sample_alerts.json` for documentation.
+- Open Wazuh Dashboard → *Threat Hunting* or *Alerts*.
+- Filter: `rule.id:(651 OR 100100)` or search by time/victim IP.
+- Store sample alerts under `/logs/sample_alerts.json` for documentation.
 
 Troubleshooting tips:
-- Use `agent_control -l` to list agents.  
-- Inspect manager logs: `/var/ossec/logs/ossec.log`.  
-- Inspect agent logs on victims: `/var/ossec/logs/ossec.log`.  
+- Use `agent_control -l` to list agents.
+- Inspect manager logs: `/var/ossec/logs/ossec.log`.
+- Inspect agent logs on victims: `/var/ossec/logs/ossec.log`.
 - Ensure file permissions for CDB lists (`wazuh:wazuh`).
 
 ---
@@ -320,11 +338,11 @@ netsh advfirewall firewall add rule name="Block-IR-$IP" dir=in action=block remo
 ---
 
 ## Incident Response Playbook (concise)
-1. **Detection** — Wazuh alert triggers.  
-2. **Triage** — Collect context: srcip, dst, timestamp, user-agent, request path.  
-3. **Containment** — Run Active Response or `block_ip_local`/`block_ip.ps1`.  
-4. **Eradication** — Remove malicious files, close exploited vectors, patch.  
-5. **Recovery** — Restore services, verify integrity.  
+1. **Detection** — Wazuh alert triggers.
+2. **Triage** — Collect context: srcip, dst, timestamp, user-agent, request path.
+3. **Containment** — Run Active Response or `block_ip_local`/`block_ip.ps1`.
+4. **Eradication** — Remove malicious files, close exploited vectors, patch.
+5. **Recovery** — Restore services, verify integrity.
 6. **Lessons Learned** — Update detection rules, improve automation.
 
 For printable checklists and step-by-step procedures, see `/docs/playbooks.md`.
@@ -332,23 +350,23 @@ For printable checklists and step-by-step procedures, see `/docs/playbooks.md`.
 ---
 
 ## Files & scripts (what to commit)
-- `/scripts/setup_webserver.sh` — Apache install + demo site creation.  
-- `/scripts/install_wazuh_agent.sh` — Agent install (platform-specific snippets).  
-- `/scripts/block_ip.sh` — Wrapper that calls ufw/iptables or invokes PowerShell via WinRM.  
-- `/lab-config/detection_rules/001-blacklist-alienvault.xml` — example rule.  
-- `/docs/playbooks.md` — printable IR playbook.  
-- `/logs/sample_alerts.json` — sample alert JSON.  
+- `/scripts/setup_webserver.sh` — Apache install + demo site creation.
+- `/scripts/install_wazuh_agent.sh` — Agent install (platform-specific snippets).
+- `/scripts/block_ip.sh` — Wrapper that calls ufw/iptables or invokes PowerShell via WinRM.
+- `/lab-config/detection_rules/001-blacklist-alienvault.xml` — example rule.
+- `/docs/playbooks.md` — printable IR playbook.
+- `/logs/sample_alerts.json` — sample alert JSON.
 - `end.mp4` — demo video of the full lab (place in repo root).
 
 ---
 
 ## Video — `end.mp4`
-Place your recorded demo named `end.mp4` in the repository root.  
+Place your recorded demo named `end.mp4` in the repository root.
 Suggested video sections:
-1. Title slide with project name and your name.  
-2. Brief architecture diagram (2–3 slides).  
-3. Live terminal: show agent logs and manager alert triggering.  
-4. Show Active Response blocking the IP (live test).  
+1. Title slide with project name and your name.
+2. Brief architecture diagram (2–3 slides).
+3. Live terminal: show agent logs and manager alert triggering.
+4. Show Active Response blocking the IP (live test).
 5. Wrap-up slide with links to repo, LinkedIn, and portfolio.
 
 Suggested video length: 90–180 seconds. Keep commands visible and use zoom-in on terminal for clarity.
@@ -356,38 +374,38 @@ Suggested video length: 90–180 seconds. Keep commands visible and use zoom-in 
 ---
 
 ## Cloud notes — Google Cloud specifics
-- Allow `tcp:80` and any management ports in GCP firewall and VM OS firewall.  
-- Use reserved static external IP for victim VMs when testing public-IP blocking.  
+- Allow `tcp:80` and any management ports in GCP firewall and VM OS firewall.
+- Use reserved static external IP for victim VMs when testing public-IP blocking.
 - Consider network tags and routes to simplify firewall rules.
 
 ---
 
 ## References & learning resources
-- Wazuh docs — Quickstart & PoC: https://documentation.wazuh.com  
-- Blocking PoC: https://documentation.wazuh.com/current/proof-of-concept-guide/block-malicious-actor-ip-reputation.html  
+- Wazuh docs — Quickstart & PoC: https://documentation.wazuh.com
+- Blocking PoC: https://documentation.wazuh.com/current/proof-of-concept-guide/block-malicious-actor-ip-reputation.html
 - Wazuh install guide (used): https://github.com/AbdulRhmanAbdulGhaffar/Wazuh_Installation_Guide
 
 ---
 
 ## Credits & acknowledgments
-- **Dr. Shehab Elbatal** — mentorship, technical guidance, and patience.  
-- **AMIT Learning** — training and support.  
+- **Dr. Shehab Elbatal** — mentorship, technical guidance, and patience.
+- **AMIT Learning** — training and support.
 - **Digital Egypt Pioneers Initiative (DEPI)** & **Ministry of Communications and Information Technology (MCIT), Egypt** — opportunity and support.
 
 ---
 
 ## Author & contact
-**AbdulRhman AbdulGhaffar**  
-- LinkedIn: https://www.linkedin.com/in/abdulrhmanabdulghaffar/  
-- Portfolio: https://abdulrhmanabdulghaffar.github.io/Portfolio/  
+**AbdulRhman AbdulGhaffar**
+- LinkedIn: https://www.linkedin.com/in/abdulrhmanabdulghaffar/
+- Portfolio: https://abdulrhmanabdulghaffar.github.io/Portfolio/
 - Email: abdulrhman.abdulghaffar001@gmail.com
 
 ---
 
 ## License
-MIT — see `LICENSE`.
+MIT — see `LICENSE` for details.
 
 ---
 
-> *This README is intentionally complete and exact. Review scripts and commands before running in production.*  
+> *This README is intentionally complete and exact. Review scripts and commands before running in production.*
 > *“وَقُل رَبِّ زِدْنِي عِلْمًا”* ✨
