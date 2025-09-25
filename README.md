@@ -16,16 +16,6 @@ Read the **Preface** and **Exact reproduction steps** sections before running an
 
 ---
 
-## Demo Video (play here)
-Place `End.mp4` in the repository root. This demo shows the full flow: attack simulation, Wazuh alert, and Active Response blocking the malicious IP.
-
-<video width="720" controls>
-  <source src="End.mp4" type="video/mp4">
-  Your browser does not support the video tag. Download `End.mp4` from the repo root to view the demonstration.
-</video>
-
----
-
 ## Output screenshot — block event (after Active Response)
 This screenshot shows the alert / block action observed after triggering the Active Response in the lab:
 
