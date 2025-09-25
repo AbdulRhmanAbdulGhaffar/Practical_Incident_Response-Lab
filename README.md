@@ -6,27 +6,45 @@
 
 ---
 
+## Preface — How to use this README (Read first)
+This document is the single authoritative guide for reproducing the lab and preparing the demo video (`end.mp4`).  
+Read the **Preface** and **Exact reproduction steps** sections before running any script.  
+- Use the **copyable single‑line commands** (marked `COPY`) for quick execution.  
+- Use multi‑line blocks only when you need to edit configuration snippets.  
+- Always replace placeholders like `<ATTACKER_IP>`, `<UBUNTU_IP>`, `<WINDOWS_IP>`, and `<WEBSERVER_IP>` with actual addresses.  
+- This README assumes you run commands with appropriate privileges (sudo / administrator).
+
+---
+
 ## Overview
 **Practical_Incident_Response-Lab** is a production-minded, hands‑on Incident Response lab.  
 It documents and reproduces the **Blocking a known malicious actor** use case using **Wazuh SIEM** (CDB lists + Active Response).
 
-This single-file README contains everything needed to reproduce the lab: architecture, exact commands, configuration snippets, automation helpers (functions), playbook steps, and references. Use this file as the authoritative guide when you build the lab or prepare a demo video (`end.mp4` placed in the repository root).
+This README contains:
+- Architecture & roles
+- Exact commands (copyable)
+- Configuration snippets
+- Automation helpers (functions)
+- Playbook steps
+- References & video
+
+The demo video file is `end.mp4` placed in the repository root. Use it for presentations or to record playback.
 
 ---
 
 ## Quick links
-- Wazuh quickstart: https://documentation.wazuh.com/current/quickstart.html
-- Wazuh PoC (blocking malicious actor): https://documentation.wazuh.com/current/proof-of-concept-guide/block-malicious-actor-ip-reputation.html
+- Wazuh quickstart: https://documentation.wazuh.com/current/quickstart.html  
+- Wazuh PoC (blocking malicious actor): https://documentation.wazuh.com/current/proof-of-concept-guide/block-malicious-actor-ip-reputation.html  
 - My Wazuh install guide: https://github.com/AbdulRhmanAbdulGhaffar/Wazuh_Installation_Guide
 
 ---
 
-## Lab summary — blocking a known malicious actor (concise)
-- Goal: Detect and automatically block a malicious IP address using an IP reputation list and Wazuh Active Response.
-- Attacker: RHEL 9.0 (simulated malicious host).
-- Victims: Ubuntu 22.04 (Apache), Windows 11 (Apache binary).
-- Wazuh: Manager + Agents monitoring Apache access logs.
-- Response: Custom Wazuh rule triggers an Active Response that runs a local block command (Ubuntu: firewall-drop / iptables or ufw; Windows: netsh) for **60 seconds**.
+## Lab summary — blocking a known malicious actor
+- **Goal:** Detect and automatically block a malicious IP address using an IP reputation list and Wazuh Active Response.  
+- **Attacker:** RHEL 9.0 (simulated).  
+- **Victims:** Ubuntu 22.04 (Apache) and Windows 11 (Apache binary).  
+- **Manager:** Wazuh Manager with CDB lists.  
+- **Response:** Active Response runs `firewall-drop` / `netsh` to block the IP for **60 seconds**.
 
 ---
 
@@ -40,60 +58,59 @@ This single-file README contains everything needed to reproduce the lab: archite
 | Wazuh Manager   | RHEL/CentOS | Wazuh Manager & CDB lists  |
 | Google Cloud    | optional | Host VMs for public IP testing |
 
-> Note: lab runs on local VMs or cloud. If using GCP, open HTTP and management ports in the VM firewall and GCP network firewall.
+> If using GCP, ensure VM firewall and GCP network firewall allow HTTP (tcp:80) and agent management ports.
 
 ---
 
 ## Exact reproduction steps (tested sequence)
-
-> Follow these steps in order. Replace `<ATTACKER_IP>`, `<UBUNTU_IP>`, `<WINDOWS_IP>`, and `<WEBSERVER_IP>` with your real addresses.
+Follow in order. Replace placeholders before running.
 
 ### 1) Ubuntu victim — Apache + Wazuh agent
 
+Single-line quick install (COPY):
 ```bash
-# 1. update & install Apache
-sudo apt update
-sudo apt install -y apache2
+# COPY: update, install Apache and enable
+sudo apt update && sudo apt install -y apache2 && sudo systemctl enable --now apache2
+```
 
-# 2. enable & verify
-sudo systemctl enable --now apache2
-sudo systemctl status apache2
-
-# 3. allow HTTP (if using ufw)
-sudo ufw allow 'Apache'   # skip if firewall disabled
-
-# 4. test site
+Verify site (COPY):
+```bash
+# COPY: test site
 curl http://<UBUNTU_IP>
+```
 
-# 5. configure Wazuh Agent to monitor Apache access log
+Add Apache log monitoring to Wazuh (use multi-line; copy block then paste):
+```bash
 sudo tee -a /var/ossec/etc/ossec.conf > /dev/null <<'XML'
 <localfile>
   <log_format>syslog</log_format>
   <location>/var/log/apache2/access.log</location>
 </localfile>
 XML
+```
 
-# 6. restart agent
+Restart agent (COPY):
+```bash
+# COPY: restart wazuh agent
 sudo systemctl restart wazuh-agent
 ```
 
 Notes:
-- If the Wazuh agent is installed in a custom path, adapt the `ossec.conf` file path accordingly.
-- Confirm `/var/ossec/etc/ossec.conf` is writable by the user or use `sudo` as above.
+- Confirm agent installed and connected to manager before testing.
+- If agent path differs, update the ossec.conf path.
 
 ---
 
 ### 2) Windows victim — Apache + Wazuh agent (summary)
 
-1. Install Visual C++ Redistributable (required by some Apache builds).
-2. Download an Apache Win64 ZIP (prebuilt) and extract to `C:\Apache24`.
-3. Run `C:\Apache24\bin\httpd.exe` as Administrator.
-   - Allow access when Windows Defender Firewall prompts.
-4. Verify: browse `http://<WINDOWS_IP>` from another host.
-5. Configure Wazuh agent (edit the agent ossec.conf):
+Steps (manual; copy the config snippet):
 
-Add to `C:\Program Files (x86)\ossec-agent\ossec.conf`:
+- Install Visual C++ Redistributable.
+- Extract Apache to `C:\Apache24` and run `C:\Apache24\bin\httpd.exe` as Administrator.
+- Allow Windows Defender Firewall when prompted.
+- Test: `http://<WINDOWS_IP>` from another host.
 
+Wazuh agent config snippet (copy and paste into agent `ossec.conf`):
 ```xml
 <localfile>
   <log_format>syslog</log_format>
@@ -101,58 +118,57 @@ Add to `C:\Program Files (x86)\ossec-agent\ossec.conf`:
 </localfile>
 ```
 
-6. Restart Wazuh agent (PowerShell as admin):
-
+Restart agent (COPY PowerShell):
 ```powershell
+# COPY: restart wazuh agent (run as admin)
 Restart-Service -Name wazuh
 ```
-
-Notes:
-- If your agent is 64-bit installed elsewhere, adapt the path.
-- If using Windows Defender or third-party AV, ensure the agent binary is whitelisted.
 
 ---
 
 ### 3) Wazuh Manager — prepare reputation list (CDB) & converter
 
-> On the Wazuh Manager host (RHEL/CentOS).
+Single-line to fetch and prepare (COPY):
+```bash
+# COPY: prepare lists dir, download ipset and converter, convert to cdb
+sudo yum update -y && sudo yum install -y wget python3 && sudo mkdir -p /var/ossec/etc/lists && sudo chown -R wazuh:wazuh /var/ossec/etc/lists && sudo wget https://iplists.firehol.org/files/alienvault_reputation.ipset -O /var/ossec/etc/lists/alienvault_reputation.ipset && sudo bash -c 'echo "<ATTACKER_IP>" >> /var/ossec/etc/lists/alienvault_reputation.ipset' && sudo wget https://wazuh.com/resources/iplist-to-cdblist.py -O /tmp/iplist-to-cdblist.py && sudo /var/ossec/framework/python/bin/python3 /tmp/iplist-to-cdblist.py /var/ossec/etc/lists/alienvault_reputation.ipset /var/ossec/etc/lists/blacklist-alienvault && sudo chown wazuh:wazuh /var/ossec/etc/lists/blacklist-alienvault && sudo rm -f /var/ossec/etc/lists/alienvault_reputation.ipset /tmp/iplist-to-cdblist.py
+```
+
+Step-by-step (copyable blocks if you prefer separate lines):
 
 ```bash
-# 1. install wget if needed
-sudo yum update -y && sudo yum install -y wget python3
-
-# 2. create lists dir if missing
+# 1. create lists dir & set permissions
 sudo mkdir -p /var/ossec/etc/lists
 sudo chown -R wazuh:wazuh /var/ossec/etc/lists
 
-# 3. download AlienVault ipset
+# 2. download AlienVault ipset
 sudo wget https://iplists.firehol.org/files/alienvault_reputation.ipset -O /var/ossec/etc/lists/alienvault_reputation.ipset
 
-# 4. append attacker IP (use sudo tee or bash -c)
+# 3. append attacker IP
 sudo bash -c 'echo "<ATTACKER_IP>" >> /var/ossec/etc/lists/alienvault_reputation.ipset'
 
-# 5. download converter script
+# 4. download converter
 sudo wget https://wazuh.com/resources/iplist-to-cdblist.py -O /tmp/iplist-to-cdblist.py
 
-# 6. convert ipset -> CDB list (adjust python path if needed)
+# 5. convert to cdb (adjust python interpreter if needed)
 sudo /var/ossec/framework/python/bin/python3 /tmp/iplist-to-cdblist.py /var/ossec/etc/lists/alienvault_reputation.ipset /var/ossec/etc/lists/blacklist-alienvault
 
-# 7. set ownership
+# 6. set ownership
 sudo chown wazuh:wazuh /var/ossec/etc/lists/blacklist-alienvault
 
-# 8. cleanup optional
+# 7. cleanup (optional)
 sudo rm -f /var/ossec/etc/lists/alienvault_reputation.ipset /tmp/iplist-to-cdblist.py
 ```
 
 Notes:
-- The converter script path and python interpreter may vary by Wazuh version. If `/var/ossec/framework/python/bin/python3` does not exist, use `python3` or the installed Wazuh Python virtualenv.
-- The resulting file `/var/ossec/etc/lists/blacklist-alienvault` must be readable by the Wazuh process (user `wazuh`).
+- If `/var/ossec/framework/python/bin/python3` is missing, use `python3` or the Wazuh venv path.
+- Verify `/var/ossec/etc/lists/blacklist-alienvault` exists and is readable by `wazuh`.
 
 ---
 
 ### 4) Wazuh Manager — add detection rule (local_rules.xml)
 
-Add a custom rule to `/var/ossec/etc/rules/local_rules.xml` (create file if missing):
+Create / edit `/var/ossec/etc/rules/local_rules.xml` and add:
 
 ```xml
 <group name="attack">
@@ -164,27 +180,24 @@ Add a custom rule to `/var/ossec/etc/rules/local_rules.xml` (create file if miss
 </group>
 ```
 
-Then ensure the list is included in `/var/ossec/etc/ossec.conf` under the `<ruleset>` section:
+Add the list to `/var/ossec/etc/ossec.conf` in the `<ruleset>` section (copy snippet):
 
 ```xml
-<ossec_config>
-  <ruleset>
-    <decoder_dir>ruleset/decoders</decoder_dir>
-    <rule_dir>ruleset/rules</rule_dir>
-    <list>etc/lists/blacklist-alienvault</list>
-    <!-- other lists -->
-  </ruleset>
-</ossec_config>
+<list>etc/lists/blacklist-alienvault</list>
+```
+
+Then restart the manager (COPY):
+```bash
+sudo systemctl restart wazuh-manager
 ```
 
 ---
 
 ### 5) Wazuh Manager — Active Response configuration
 
-Add Active Response blocks to `/var/ossec/etc/ossec.conf`:
+Add the following active-response blocks to `/var/ossec/etc/ossec.conf`:
 
-**Ubuntu (firewall-drop / local iptables/ufw):**
-
+**Ubuntu (firewall-drop)**:
 ```xml
 <active-response>
   <disabled>no</disabled>
@@ -195,8 +208,7 @@ Add Active Response blocks to `/var/ossec/etc/ossec.conf`:
 </active-response>
 ```
 
-**Windows (netsh):**
-
+**Windows (netsh)**:
 ```xml
 <active-response>
   <disabled>no</disabled>
@@ -207,57 +219,51 @@ Add Active Response blocks to `/var/ossec/etc/ossec.conf`:
 </active-response>
 ```
 
-Apply changes:
-
+Apply and verify (COPY):
 ```bash
 sudo systemctl restart wazuh-manager
-# verify manager status
 sudo systemctl status wazuh-manager
 ```
 
 Notes:
-- `firewall-drop` and `netsh` active-response commands are provided by Wazuh by default. Confirm presence in `/var/ossec/active-response/bin/`.
-- Timeout is in seconds (60s here). Tune for your lab.
+- Confirm `firewall-drop` and `netsh` scripts exist under `/var/ossec/active-response/bin/`.
+- Adjust timeout as needed.
 
 ---
 
 ### 6) Emulate the attack (RHEL attacker)
 
-From the RHEL attacker host run:
-
+Quick test (COPY):
 ```bash
-# first request (observed and logged)
 curl http://<WEBSERVER_IP>
-
-# repeat to trigger blocking behavior
 curl http://<WEBSERVER_IP>
 ```
 
-Expected behavior:
-- Wazuh Agent on the victim sends Apache access logs to the Manager.
-- Manager checks `srcip` against CDB `blacklist-alienvault` list.
-- Rule `100100` matches and Wazuh triggers Active Response.
-- Active Response blocks the IP on victim for the configured timeout (60s).
+Expected:
+- First request logged, subsequent request triggers block for 60s.
+- Check Wazuh alerts and agent logs to confirm.
 
 ---
 
 ### 7) Visualize alerts & troubleshooting
 
-- Open Wazuh Dashboard → *Threat Hunting* or *Alerts*.
-- Filter: `rule.id:(651 OR 100100)` or search by the victim hostname/IP/time window.
-- Store sample alerts in `/logs/sample_alerts.json` for reference.
+- Open Wazuh Dashboard → *Threat Hunting* or *Alerts*.  
+- Filter: `rule.id:(651 OR 100100)` or search by time/victim IP.  
+- Save sample alerts under `/logs/sample_alerts.json` for documentation.
 
 Troubleshooting tips:
-- Confirm agent-manager connectivity (`agent_control -l` / Wazuh > Agents UI).
-- Check Wazuh manager logs: `/var/ossec/logs/ossec.log`.
-- Check agent logs on victims: `/var/ossec/logs/ossec.log`.
-- Validate that the `blacklist-alienvault` file exists and is readable by `wazuh` user.
+- Use `agent_control -l` to list agents.  
+- Inspect manager logs: `/var/ossec/logs/ossec.log`.  
+- Inspect agent logs on victims: `/var/ossec/logs/ossec.log`.  
+- Ensure file permissions for CDB lists (`wazuh:wazuh`).
 
 ---
 
 ## Automation helpers — ready-to-use functions & scripts
 
 ### Bash function — append IP and convert to CDB (manager)
+Copy this into an interactive shell or a script on the manager:
+
 ```bash
 # Usage: sudo add_attacker_ip <ATTACKER_IP>
 add_attacker_ip() {
@@ -269,20 +275,16 @@ add_attacker_ip() {
   sudo mkdir -p /var/ossec/etc/lists
   sudo chown wazuh:wazuh /var/ossec/etc/lists || true
 
-  # ensure source file exists
   if [ ! -f "$LIST_PATH" ]; then
     sudo wget https://iplists.firehol.org/files/alienvault_reputation.ipset -O "$LIST_PATH"
   fi
 
-  # append IP
   sudo bash -c "echo '${ATT}' >> ${LIST_PATH}"
 
-  # download converter if missing
   if [ ! -f "$TMP_SCRIPT" ]; then
     sudo wget https://wazuh.com/resources/iplist-to-cdblist.py -O "$TMP_SCRIPT"
   fi
 
-  # convert to CDB
   sudo /var/ossec/framework/python/bin/python3 "$TMP_SCRIPT" "$LIST_PATH" "$CDB_PATH"
   sudo chown wazuh:wazuh "$CDB_PATH"
   echo "Added ${ATT} and converted to ${CDB_PATH}"
@@ -290,72 +292,87 @@ add_attacker_ip() {
 ```
 
 ### Bash helper — local block (victim)
+Save as `/usr/local/bin/block_ip_local.sh` and make executable:
+
 ```bash
+#!/usr/bin/env bash
 # Usage: sudo block_ip_local 1.2.3.4
-block_ip_local() {
-  IP="$1"
-  if command -v ufw >/dev/null 2>&1; then
-    sudo ufw insert 1 deny from "$IP" to any
-  else
-    sudo iptables -I INPUT -s "$IP" -j DROP
-  fi
-  echo "Blocked ${IP} locally."
-}
+IP="$1"
+if command -v ufw >/dev/null 2>&1; then
+  sudo ufw insert 1 deny from "$IP" to any
+else
+  sudo iptables -I INPUT -s "$IP" -j DROP
+fi
+echo "Blocked ${IP} locally."
 ```
 
 ### PowerShell helper — Windows local block
+Save as `block_ip.ps1` and run as admin:
+
 ```powershell
-# Usage: .\block_ip.ps1 -IP "1.2.3.4"
 param([string]$IP)
 Write-Output "Blocking $IP via netsh"
 netsh advfirewall firewall add rule name="Block-IR-$IP" dir=in action=block remoteip=$IP enable=yes
 ```
 
-> These helpers are examples. Review and adapt to your environment before running.
+> Review scripts before running. They are designed for lab use, not production.
 
 ---
 
 ## Incident Response Playbook (concise)
-1. **Detection** — Wazuh alerts on suspicious activity / CDB match.  
-2. **Triage** — Gather context: timestamp, srcip, dst, user agent, request path.  
-3. **Containment** — Execute Active Response / run `block_ip_local` / isolate VM.  
-4. **Eradication** — Remove web shells, malicious files; patch vulnerable software.  
-5. **Recovery** — Rebuild or harden affected services; validate integrity.  
-6. **Lessons Learned** — Document root cause, update rules, automate defenses.
+1. **Detection** — Wazuh alert triggers.  
+2. **Triage** — Collect context: srcip, dst, timestamp, user-agent, request path.  
+3. **Containment** — Run Active Response or `block_ip_local`/`block_ip.ps1`.  
+4. **Eradication** — Remove malicious files, close exploited vectors, patch.  
+5. **Recovery** — Restore services, verify integrity.  
+6. **Lessons Learned** — Update detection rules, improve automation.
 
-Include a detailed `docs/playbooks.md` for printed procedures and checklists.
+For printable checklists and step-by-step procedures, see `/docs/playbooks.md`.
 
 ---
 
 ## Files & scripts (what to commit)
-- `/scripts/setup_webserver.sh` — Apache install + demo site creation.
-- `/scripts/install_wazuh_agent.sh` — Agent install (platform-specific snippets).
-- `/scripts/block_ip.sh` — Simple wrapper calling `ufw`/`iptables` or `netsh`.
-- `/lab-config/detection_rules/001-blacklist-alienvault.xml` — example rule.
-- `/docs/playbooks.md` — printable IR playbook with checklists.
-- `/logs/sample_alerts.json` — sample alert JSON for reference.
+- `/scripts/setup_webserver.sh` — Apache install + demo site creation.  
+- `/scripts/install_wazuh_agent.sh` — Agent install (platform-specific snippets).  
+- `/scripts/block_ip.sh` — Wrapper that calls ufw/iptables or invokes PowerShell via WinRM.  
+- `/lab-config/detection_rules/001-blacklist-alienvault.xml` — example rule.  
+- `/docs/playbooks.md` — printable IR playbook.  
+- `/logs/sample_alerts.json` — sample alert JSON.  
 - `end.mp4` — demo video of the full lab (place in repo root).
 
 ---
 
+## Video — `end.mp4`
+Place your recorded demo named `end.mp4` in the repository root.  
+Suggested video sections:
+1. Title slide with project name and your name.  
+2. Brief architecture diagram (2–3 slides).  
+3. Live terminal: show agent logs and manager alert triggering.  
+4. Show Active Response blocking the IP (live test).  
+5. Wrap-up slide with links to repo, LinkedIn, and portfolio.
+
+Suggested video length: 90–180 seconds. Keep commands visible and use zoom-in on terminal for clarity.
+
+---
+
 ## Cloud notes — Google Cloud specifics
-- If you use **GCP**, allow `tcp:80` on the VM network tag and open the VM external IP for test traffic.  
-- GCP internal firewall and OS-level firewall (ufw/iptables) must both allow HTTP or the Wazuh agent will not receive expected logs.  
-- For public IP testing, ensure the external IP is reachable from the attacker VM and that routes are correct.
+- Allow `tcp:80` and any management ports in GCP firewall and VM OS firewall.  
+- Use reserved static external IP for victim VMs when testing public-IP blocking.  
+- Consider network tags and routes to simplify firewall rules.
 
 ---
 
 ## References & learning resources
-- Wazuh docs — Quickstart & PoC: https://documentation.wazuh.com
-- Blocking PoC: https://documentation.wazuh.com/current/proof-of-concept-guide/block-malicious-actor-ip-reputation.html
-- My Wazuh install guide: https://github.com/AbdulRhmanAbdulGhaffar/Wazuh_Installation_Guide
+- Wazuh docs — Quickstart & PoC: https://documentation.wazuh.com  
+- Blocking PoC: https://documentation.wazuh.com/current/proof-of-concept-guide/block-malicious-actor-ip-reputation.html  
+- Wazuh install guide (used): https://github.com/AbdulRhmanAbdulGhaffar/Wazuh_Installation_Guide
 
 ---
 
 ## Credits & acknowledgments
 - **Dr. Shehab Elbatal** — mentorship, technical guidance, and patience.  
 - **AMIT Learning** — training and support.  
-- **Digital Egypt Pioneers Initiative (DEPI)** & **Ministry of Communications and Information Technology (MCIT), Egypt** — opportunity and support.  
+- **Digital Egypt Pioneers Initiative (DEPI)** & **Ministry of Communications and Information Technology (MCIT), Egypt** — opportunity and support.
 
 ---
 
@@ -368,10 +385,9 @@ Include a detailed `docs/playbooks.md` for printed procedures and checklists.
 ---
 
 ## License
-MIT — see `LICENSE` for details.
+MIT — see `LICENSE`.
 
 ---
 
-> *This README is intentionally complete and exact. Review every script and command before running in production.*
-> 
+> *This README is intentionally complete and exact. Review scripts and commands before running in production.*  
 > *“وَقُل رَبِّ زِدْنِي عِلْمًا”* ✨
