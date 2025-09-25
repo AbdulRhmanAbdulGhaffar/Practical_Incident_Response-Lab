@@ -363,7 +363,8 @@ For printable checklists and step-by-step procedures, see `/docs/playbooks.md`.
 
 ## 🎥 Demo Video
 
-[![Watch the Demo](./End.mp4)
+![Demo](./End.gif)
+
 
 ## Cloud notes — Google Cloud specifics
 - Allow `tcp:80` and any management ports in GCP firewall and VM OS firewall.
