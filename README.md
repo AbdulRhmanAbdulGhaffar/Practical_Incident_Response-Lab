@@ -359,19 +359,9 @@ For printable checklists and step-by-step procedures, see `/docs/playbooks.md`.
 - `end.mp4` — demo video of the full lab (place in repo root).
 
 ---
+## Video Demo
 
-## Video — `end.mp4`
-Place your recorded demo named `end.mp4` in the repository root.
-Suggested video sections:
-1. Title slide with project name and your name.
-2. Brief architecture diagram (2–3 slides).
-3. Live terminal: show agent logs and manager alert triggering.
-4. Show Active Response blocking the IP (live test).
-5. Wrap-up slide with links to repo, LinkedIn, and portfolio.
-
-Suggested video length: 90–180 seconds. Keep commands visible and use zoom-in on terminal for clarity.
-
----
+🎥 [Watch the Demo Video](https://github.com/AbdulRhmanAbdulGhaffar/Practical_Incident_Response-Lab/releases/download/v1.0/End.mp4))
 
 ## Cloud notes — Google Cloud specifics
 - Allow `tcp:80` and any management ports in GCP firewall and VM OS firewall.
@@ -408,4 +398,4 @@ MIT — see `LICENSE` for details.
 ---
 
 > *This README is intentionally complete and exact. Review scripts and commands before running in production.*
-> *“وَقُل رَبِّ زِدْنِي عِلْمًا”* ✨
+> *“وَقُل رَبِّ زِدْنِي عِلْمًا”* 
