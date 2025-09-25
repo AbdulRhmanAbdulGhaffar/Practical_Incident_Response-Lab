@@ -361,7 +361,9 @@ For printable checklists and step-by-step procedures, see `/docs/playbooks.md`.
 ---
 ## Video Demo
 
-🎥 [Watch the Demo Video](https://github.com/AbdulRhmanAbdulGhaffar/Practical_Incident_Response-Lab/releases/download/v1.0/End.mp4))
+## 🎥 Demo Video
+
+[![Watch the Demo](https://i.postimg.cc/FsxX50tX/Screenshot-2025-09-25-040507.png)](./end.mp4)
 
 ## Cloud notes — Google Cloud specifics
 - Allow `tcp:80` and any management ports in GCP firewall and VM OS firewall.
