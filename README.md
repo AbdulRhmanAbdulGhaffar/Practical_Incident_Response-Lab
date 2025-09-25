@@ -359,13 +359,12 @@ For printable checklists and step-by-step procedures, see `/docs/playbooks.md`.
 - `end.mp4` — demo video of the full lab (place in repo root).
 
 ---
-## Video Demo
 
 ## 🎥 Watch the Demo
-[![Demo](https://www.google.com/imgres?q=video&imgurl=https%3A%2F%2Fitiq.ps%2Fwp-content%2Fuploads%2F2021%2F10%2Fyoutube-video-titles.jpg&imgrefurl=https%3A%2F%2Fitiq.ps%2Fvideo%2F&docid=4Wtx3Eh5B03egM&tbnid=rZoP8E1ylWR7fM&vet=12ahUKEwirrPyU5fKPAxU2BfsDHcTbKKoQM3oECCEQAA..i&w=693&h=419&hcb=2&ved=2ahUKEwirrPyU5fKPAxU2BfsDHcTbKKoQM3oECCEQAA)](./End.mp4)
+[![Demo](https://i.postimg.cc/B6DvfNfB/download.jpg)](./End.mp4)
 
 
-
+---
 ## Cloud notes — Google Cloud specifics
 - Allow `tcp:80` and any management ports in GCP firewall and VM OS firewall.
 - Use reserved static external IP for victim VMs when testing public-IP blocking.
